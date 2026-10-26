@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <title>Taktiktavle Pro</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    * {
       box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
@@ -489,7 +491,7 @@
       try {
         const state = JSON.parse(data);
         drawings = state.drawings || [];
-        pieces = []; // Nulstil for at undgå dubletter
+        pieces = []; 
         if (state.pieces && state.pieces.length > 0) {
           state.pieces.forEach(p => {
             if (!p.onBench) {
@@ -526,7 +528,6 @@
       benchSlots.innerHTML = '';
       let benchPlayers = pieces.filter(p => p.team === 'team-a' && p.onBench);
       
-      // Sorter bænken numerisk
       benchPlayers.sort((a, b) => (parseInt(a.num) || 0) - (parseInt(b.num) || 0));
 
       benchPlayers.forEach(p => {
@@ -541,7 +542,6 @@
         el.style.cursor = 'pointer';
         el.title = 'Tryk for at redigere eller skifte ind';
         
-        // Tryk på bænkespiller åbner en menu med valg (Rediger eller Skift ind)
         el.onclick = () => {
           openBenchActionModal(p);
         };
@@ -591,10 +591,8 @@
       
       select.innerHTML = '';
       
-      // Hent kun unikke aktive spillere og sorter dem numerisk
       let activeMap = new Map();
       pieces.forEach(p => {
-        if (p.team.startsWith('team-a') && !p.onBench && p.type !== 'player') return;
         if (p.team.startsWith('team-a') && !p.onBench && p.type === 'player') {
           activeMap.set(p.id, p);
         }
@@ -635,12 +633,10 @@
           const posX = parseFloat(fieldPlayer.element.style.left);
           const posY = parseFloat(fieldPlayer.element.style.top);
 
-          // Fjern markspiller fra banen og send til bænken
           fieldPlayer.element.remove();
           fieldPlayer.onBench = true;
           fieldPlayer.element = null;
 
-          // Hent bænkespiller ind på banen på præcis samme position
           benchPlayer.onBench = false;
           
           const el = document.createElement('div');
@@ -731,7 +727,6 @@
     function createPieceElement(type, x, y, team = 'team-a', num = '1', name = 'Spiller', existingId = null, onBench = false) {
       const id = existingId || 'piece_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
       
-      // Undgå duplikater i pieces arrayet
       if (pieces.some(p => p.id === id)) return;
 
       if (onBench) {
