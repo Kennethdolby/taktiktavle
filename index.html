@@ -517,7 +517,7 @@
     function initBench() {
       const currentBench = pieces.filter(p => p.team === 'team-a' && p.onBench);
       if (currentBench.length === 0) {
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 6; i++) {
           createPieceElement('player', 0, 0, 'team-a', (11 + i).toString(), `Reserve ${i}`, null, true);
         }
       }
@@ -1131,7 +1131,12 @@
     };
 
     document.getElementById('addTeamABtn').onclick = () => {
-      let teamACount = pieces.filter(p => p.team.startsWith('team-a') && !p.onBench).length + 1;
+      let currentFieldCount = pieces.filter(p => p.team.startsWith('team-a') && !p.onBench && p.type === 'player').length;
+      if (currentFieldCount >= 11) {
+        alert('Der kan maksimalt være 11 spillere på banen for Blåt Hold.');
+        return;
+      }
+      let teamACount = currentFieldCount + 1;
       createPieceElement('player', canvas.width / 2, canvas.height * 0.75, 'team-a', teamACount, 'Spiller', null, false);
     };
 
