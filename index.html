@@ -481,11 +481,11 @@
     }
 
     function loadData() {
+      isInitialized = true; // Sæt den tidligt så createPieceElement må gemme
       const data = localStorage.getItem('taktiktavle_data');
       if (!data) {
         setupDefaultFormation();
         initBench();
-        isInitialized = true;
         return;
       }
       try {
@@ -511,7 +511,6 @@
         setupDefaultFormation();
         initBench();
       }
-      isInitialized = true;
     }
 
     function initBench() {
@@ -560,199 +559,4 @@
       const subBtn = document.getElementById('benchSubBtn');
       const cancelBtn = document.getElementById('benchActionCancelBtn');
 
-      const newEditBtn = editBtn.cloneNode(true);
-      const newSubBtn = subBtn.cloneNode(true);
-      const newCancelBtn = cancelBtn.cloneNode(true);
-      editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-      subBtn.parentNode.replaceChild(newSubBtn, subBtn);
-      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-      newEditBtn.onclick = () => {
-        modal.style.display = 'none';
-        openPlayerModal(benchPlayer);
-      };
-
-      newSubBtn.onclick = () => {
-        modal.style.display = 'none';
-        openSubstituteModal(benchPlayer);
-      };
-
-      newCancelBtn.onclick = () => {
-        modal.style.display = 'none';
-      };
-    }
-
-    function openSubstituteModal(benchPlayer) {
-      const modal = document.getElementById('substituteModal');
-      const info = document.getElementById('substituteBenchPlayerInfo');
-      const select = document.getElementById('modalFieldPlayerSelect');
-
-      info.innerText = `Udskifter ind fra bænken: Nr. ${benchPlayer.num} - ${benchPlayer.name}`;
-      
-      select.innerHTML = '';
-      
-      let activeMap = new Map();
-      pieces.forEach(p => {
-        if (p.team.startsWith('team-a') && !p.onBench && p.type === 'player') {
-          activeMap.set(p.id, p);
-        }
-      });
-      let activePlayers = Array.from(activeMap.values());
-      activePlayers.sort((a, b) => (parseInt(a.num) || 0) - (parseInt(b.num) || 0));
-
-      if (activePlayers.length === 0) {
-        select.innerHTML = '<option value="">Ingen spillere på banen</option>';
-      } else {
-        activePlayers.forEach(fp => {
-          const opt = document.createElement('option');
-          opt.value = fp.id;
-          opt.innerText = `Nr. ${fp.num} - ${fp.name}`;
-          select.appendChild(opt);
-        });
-      }
-
-      modal.style.display = 'flex';
-
-      const okBtn = document.getElementById('subModalOkBtn');
-      const cancelBtn = document.getElementById('subModalCancelBtn');
-
-      const newOkBtn = okBtn.cloneNode(true);
-      const newCancelBtn = cancelBtn.cloneNode(true);
-      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-      newOkBtn.onclick = () => {
-        const targetFieldPlayerId = select.value;
-        if (!targetFieldPlayerId) {
-          alert('Vælg venligst en spiller på banen at skifte med.');
-          return;
-        }
-
-        const fieldPlayer = pieces.find(p => p.id === targetFieldPlayerId);
-        if (fieldPlayer && fieldPlayer.element) {
-          const posX = parseFloat(fieldPlayer.element.style.left);
-          const posY = parseFloat(fieldPlayer.element.style.top);
-
-          fieldPlayer.element.remove();
-          fieldPlayer.onBench = true;
-          fieldPlayer.element = null;
-
-          benchPlayer.onBench = false;
-          
-          const el = document.createElement('div');
-          el.className = `piece ${benchPlayer.team}`;
-          el.innerHTML = `
-            <div class="player-circle">${benchPlayer.num}</div>
-            <div class="player-label">${benchPlayer.name}</div>
-          `;
-          el.style.left = `${posX}px`;
-          el.style.top = `${posY}px`;
-          field.appendChild(el);
-
-          benchPlayer.element = el;
-          makeDraggable(el, benchPlayer);
-
-          if (benchPlayer.type !== 'ball') {
-            el.addEventListener('dblclick', () => {
-              openPlayerModal(benchPlayer);
-            });
-          }
-
-          saveData();
-          renderBenchUI();
-          modal.style.display = 'none';
-        }
-      };
-
-      newCancelBtn.onclick = () => {
-        modal.style.display = 'none';
-      };
-    }
-
-    function openPlayerModal(pieceObj) {
-      const modal = document.getElementById('playerModal');
-      const nameInput = document.getElementById('modalNameInput');
-      const numInput = document.getElementById('modalNumInput');
-
-      nameInput.value = pieceObj.name;
-      numInput.value = pieceObj.num;
-      modal.style.display = 'flex';
-
-      const okBtn = document.getElementById('modalOkBtn');
-      const cancelBtn = document.getElementById('modalCancelBtn');
-      const deleteBtn = document.getElementById('modalDeleteBtn');
-
-      const newOkBtn = okBtn.cloneNode(true);
-      const newCancelBtn = cancelBtn.cloneNode(true);
-      const newDeleteBtn = deleteBtn.cloneNode(true);
-      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-      deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-
-      newOkBtn.onclick = () => {
-        const newNum = numInput.value.trim();
-        const newName = nameInput.value.trim();
-        if (newNum !== '') {
-          pieceObj.num = newNum;
-          if (!pieceObj.onBench && pieceObj.element) {
-            pieceObj.element.querySelector('.player-circle').innerText = newNum;
-          }
-        }
-        if (newName !== '') {
-          pieceObj.name = newName;
-          if (!pieceObj.onBench && pieceObj.element) {
-            pieceObj.element.querySelector('.player-label').innerText = newName;
-          }
-        }
-        saveData();
-        renderBenchUI();
-        modal.style.display = 'none';
-      };
-
-      newCancelBtn.onclick = () => {
-        modal.style.display = 'none';
-      };
-
-      newDeleteBtn.onclick = () => {
-        if (confirm(`Vil du slette spiller ${pieceObj.name}?`)) {
-          if (pieceObj.element) pieceObj.element.remove();
-          pieces = pieces.filter(p => p.id !== pieceObj.id);
-          saveData();
-          renderBenchUI();
-          modal.style.display = 'none';
-        }
-      };
-    }
-
-    function createPieceElement(type, x, y, team = 'team-a', num = '1', name = 'Spiller', existingId = null, onBench = false) {
-      const id = existingId || 'piece_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-      
-      if (pieces.some(p => p.id === id)) return;
-
-      if (onBench) {
-        pieces.push({ id, element: null, type, team, num, name, onBench: true });
-        return;
-      }
-
-      const el = document.createElement('div');
-      el.className = `piece ${team} ${type === 'ball' ? 'ball-piece' : ''}`;
-      
-      if (type === 'ball') {
-        el.innerHTML = `<div class="ball">⚽</div>`;
-      } else {
-        el.innerHTML = `
-          <div class="player-circle">${num}</div>
-          <div class="player-label">${name}</div>
-        `;
-      }
-
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      field.appendChild(el);
-
-      const pieceObj = { id, element: el, type, team, num, name, onBench: false };
-      pieces.push(pieceObj);
-
-      if (type !== 'ball') {
-        el.addEventListener('dblclick', () => {
-          openPlayerModal(pieceObj);
+      const newEditBtn = editBtn.cloneNode(
