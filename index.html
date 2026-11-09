@@ -88,9 +88,6 @@
       position: relative;
       background: #15803d;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       width: 100%;
     }
     canvas#pitch {
@@ -100,6 +97,15 @@
       width: 100%;
       height: 100%;
       z-index: 1;
+    }
+    #piecesContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      pointer-events: none; /* Lader klik gå igennem til canvas, men brikker har pointer-events auto */
     }
 
     /* Udskiftningsbænk bar */
@@ -128,13 +134,13 @@
     /* Brikker: Spillere og Bold */
     .piece {
       position: absolute;
-      z-index: 10;
       transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: move;
       touch-action: none;
+      pointer-events: auto; /* Gør at brikkerne kan trækkes */
     }
     .piece.ball-piece {
       z-index: 30 !important;
@@ -332,6 +338,7 @@
 
   <div class="field-container" id="field">
     <canvas id="pitch"></canvas>
+    <div id="piecesContainer"></div>
   </div>
 
   <!-- Udskiftningsbænk -->
@@ -406,6 +413,7 @@
 
   <script>
     const field = document.getElementById('field');
+    const piecesContainer = document.getElementById('piecesContainer');
     const canvas = document.getElementById('pitch');
     const ctx = canvas.getContext('2d');
     const benchSlots = document.getElementById('benchSlots');
@@ -557,7 +565,7 @@
     function openBenchActionModal(benchPlayer) {
       const modal = document.getElementById('benchActionModal');
       const title = document.getElementById('benchActionTitle');
-      title.innerText = `Nr. ${benchPlayer.num} - ${benchPlayer.name}`;
+      title.innerText = `Nr. ${benchPlayer.num} -${benchPlayer.name}`;
       modal.style.display = 'flex';
 
       const editBtn = document.getElementById('benchEditBtn');
@@ -591,67 +599,13 @@
       const info = document.getElementById('substituteBenchPlayerInfo');
       const select = document.getElementById('modalFieldPlayerSelect');
 
-      info.innerText = `Udskifter ind fra bænken: Nr. ${benchPlayer.num} - ${benchPlayer.name}`;
-      
-      select.innerHTML = '';
-      
-      let activeMap = new Map();
-      pieces.forEach(p => {
-        if (p.team.startsWith('team-a') && !p.onBench && p.type === 'player') {
-          activeMap.set(p.id, p);
-        }
-      });
-      let activePlayers = Array.from(activeMap.values());
-      activePlayers.sort((a, b) => (parseInt(a.num) || 0) - (parseInt(b.num) || 0));
-
-      if (activePlayers.length === 0) {
-        select.innerHTML = '<option value="">Ingen spillere på banen</option>';
-      } else {
-        activePlayers.forEach(fp => {
-          const opt = document.createElement('option');
-          opt.value = fp.id;
-          opt.innerText = `Nr. ${fp.num} - ${fp.name}`;
-          select.appendChild(opt);
-        });
-      }
-
-      modal.style.display = 'flex';
-
-      const okBtn = document.getElementById('subModalOkBtn');
-      const cancelBtn = document.getElementById('subModalCancelBtn');
-
-      const newOkBtn = okBtn.cloneNode(true);
-      const newCancelBtn = cancelBtn.cloneNode(true);
-      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-      newOkBtn.onclick = () => {
-        const targetFieldPlayerId = select.value;
-        if (!targetFieldPlayerId) {
-          alert('Vælg venligst en spiller på banen at skifte med.');
-          return;
-        }
-
-        const fieldPlayer = pieces.find(p => p.id === targetFieldPlayerId);
-        if (fieldPlayer && fieldPlayer.element) {
-          const posX = parseFloat(fieldPlayer.element.style.left);
-          const posY = parseFloat(fieldPlayer.element.style.top);
-
-          fieldPlayer.element.remove();
-          fieldPlayer.onBench = true;
-          fieldPlayer.element = null;
-
-          benchPlayer.onBench = false;
-          
-          const el = document.createElement('div');
-          el.className = `piece ${benchPlayer.team}`;
+      info.innerText = `Udskifter ind fra bænken: Nr. ${benchPlayer.num} - ${benchPlayer.name}`;  select.innerHTML = '';  let activeMap = new Map(); pieces.forEach(p => { if (p.team.startsWith('team-a') && !p.onBench && p.type === 'player') { activeMap.set(p.id, p); } }); let activePlayers = Array.from(activeMap.values()); activePlayers.sort((a, b) => (parseInt(a.num) \vert{}\vert{} 0) - (parseInt(b.num) \vert{}\vert{} 0));  if (activePlayers.length === 0) { select.innerHTML = '<option value="">Ingen spillere på banen</option>'; } else { activePlayers.forEach(fp => { const opt = document.createElement('option'); opt.value = fp.id; opt.innerText = `Nr. ${fp.num} - ${fp.name}`; select.appendChild(opt); }); }  modal.style.display = 'flex';  const okBtn = document.getElementById('subModalOkBtn'); const cancelBtn = document.getElementById('subModalCancelBtn');  const newOkBtn = okBtn.cloneNode(true); const newCancelBtn = cancelBtn.cloneNode(true); okBtn.parentNode.replaceChild(newOkBtn, okBtn); cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);  newOkBtn.onclick = () => { const targetFieldPlayerId = select.value; if (!targetFieldPlayerId) { alert('Vælg venligst en spiller på banen at skifte med.'); return; }  const fieldPlayer = pieces.find(p => p.id === targetFieldPlayerId); if (fieldPlayer && fieldPlayer.element) { const posX = parseFloat(fieldPlayer.element.style.left); const posY = parseFloat(fieldPlayer.element.style.top);  fieldPlayer.element.remove(); fieldPlayer.onBench = true; fieldPlayer.element = null;  benchPlayer.onBench = false;  const el = document.createElement('div'); el.className = `piece ${benchPlayer.team}`;
           el.innerHTML = `
             <div class="player-circle">${benchPlayer.num}</div>
             <div class="player-label">${benchPlayer.name}</div>
           `;
-          el.style.left = `${posX}px`;
-          el.style.top = `${posY}px`;
-          field.appendChild(el);
+          el.style.left = `${posX}px`; el.style.top = `${posY}px`;
+          piecesContainer.appendChild(el);
 
           benchPlayer.element = el;
           makeDraggable(el, benchPlayer);
@@ -718,4 +672,4 @@
       };
 
       newDeleteBtn.onclick = () => {
-        if (
+        if (confirm(`Vil du slette
