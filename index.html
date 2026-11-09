@@ -1058,6 +1058,7 @@
     }
 
     function applyFormation(formation) {
+      // Gem navne/numre baseret på trøjenummer, hvis spillerne er på banen
       let customNames = {};
       pieces.forEach(p => {
         if (p.team.startsWith('team-a') && !p.onBench && p.num && p.name !== 'Spiller') {
@@ -1065,6 +1066,7 @@
         }
       });
 
+      // Fjern kun Blåt Holds spillere fra banen (behold bænken)
       pieces.forEach(p => {
         if (p.team.startsWith('team-a') && !p.onBench) {
           if (p.element) p.element.remove();
@@ -1160,15 +1162,19 @@
     };
     
     document.getElementById('resetAllBtn').onclick = () => {
-      if (confirm('Vil du nulstille hele banen og alle navne?')) {
-        localStorage.removeItem('taktiktavle_data');
-        drawings = [];
+      if (confirm('Vil du nulstille banen? (Dine navne på bænken bevares)')) {
         pieces.forEach(p => {
           if (p.element) p.element.remove();
         });
-        pieces = [];
-        setupDefaultFormation();
-        initBench();
+        pieces = pieces.filter(p => p.onBench); // Behold bænken
+        drawings = [];
+        
+        const w = canvas.width;
+        const h = canvas.height;
+        createPieceElement('ball', w / 2, h / 2);
+        applyFormation(document.getElementById('formationSelect').value);
+        applyTeamBFormation(document.getElementById('formationSelect').value);
+        saveData();
         redrawCanvas();
       }
     };
