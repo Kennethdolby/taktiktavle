@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <title>Taktiktavle Pro</title>
+  <link rel="manifest" href="manifest.json">
   <style>
     * {
       box-sizing: border-box;
@@ -417,11 +418,11 @@
     let isInitialized = false;
 
     function resizeCanvas() {
-      const w = field.clientWidth || window.innerWidth || 400;
-      const h = field.clientHeight || (window.innerHeight - 150) || 500;
+      const w = field.clientWidth || window.innerWidth;
+      const h = field.clientHeight || (window.innerHeight - 150);
       
-      canvas.width = w > 50 ? w : 400;
-      canvas.height = h > 50 ? h : 500;
+      canvas.width = w > 0 ? w : 400;
+      canvas.height = h > 0 ? h : 500;
 
       drawPitch();
       redrawCanvas();
@@ -463,30 +464,24 @@
 
     function saveData() {
       if (!isInitialized) return;
-      try {
-        const state = {
-          pieces: pieces.map(p => ({
-            id: p.id,
-            x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
-            y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
-            type: p.type,
-            num: p.num,
-            name: p.name,
-            team: p.team,
-            onBench: p.onBench || false
-          })),
-          drawings: drawings
-        };
-        localStorage.setItem('taktiktavle_data', JSON.stringify(state));
-      } catch (e) {}
+      const state = {
+        pieces: pieces.map(p => ({
+          id: p.id,
+          x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
+          y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
+          type: p.type,
+          num: p.num,
+          name: p.name,
+          team: p.team,
+          onBench: p.onBench || false
+        })),
+        drawings: drawings
+      };
+      localStorage.setItem('taktiktavle_data', JSON.stringify(state));
     }
 
     function loadData() {
-      let data = null;
-      try {
-        data = localStorage.getItem('taktiktavle_data');
-      } catch (e) {}
-
+      const data = localStorage.getItem('taktiktavle_data');
       if (!data) {
         setupDefaultFormation();
         initBench();
@@ -1000,4 +995,136 @@
       const w = canvas.width;
       const h = canvas.height;
 
-      let coords = getCoordsForFormation
+      let coords = getCoordsForFormation(formation, false);
+      coords.forEach((c) => {
+        let teamClass = c.isGk ? 'team-a gk' : 'team-a';
+        let name = customNames[c.num] || c.name;
+        createPieceElement('player', w * c.x, h * c.y, teamClass, c.num, name, null, false);
+      });
+
+      saveData();
+    }
+
+    function applyTeamBFormation(formation) {
+      pieces.forEach(p => {
+        if (p.team.startsWith('team-b')) {
+          if (p.element) p.element.remove();
+        }
+      });
+      pieces = pieces.filter(p => !p.team.startsWith('team-b'));
+
+      const w = canvas.width;
+      const h = canvas.height;
+      let coords = getCoordsForFormation(formation, true);
+
+      coords.forEach((c) => {
+        let teamClass = c.isGk ? 'team-b gk' : 'team-b';
+        createPieceElement('player', w * c.x, h * c.y, teamClass, c.num, c.name, null, false);
+      });
+
+      saveData();
+    }
+
+    function setupDefaultFormation() {
+      const w = canvas.width > 0 ? canvas.width : 400;
+      const h = canvas.height > 0 ? canvas.height : 500;
+      
+      createPieceElement('ball', w / 2, h / 2);
+      applyFormation('4-3-3');
+      applyTeamBFormation('4-3-3');
+      document.getElementById('formationSelect').value = "4-3-3";
+    }
+
+    document.getElementById('toolMove').onclick = () => setTool('move');
+    document.getElementById('toolLine').onclick = () => setTool('line');
+    document.getElementById('toolArrow').onclick = () => setTool('arrow');
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      if (tool === 'move') document.getElementById('toolMove').classList.add('active');
+      if (tool === 'line') document.getElementById('toolLine').classList.add('active');
+      if (tool === 'arrow') document.getElementById('toolArrow').classList.add('active');
+    }
+
+    document.getElementById('formationSelect').onchange = (e) => {
+      const val = e.target.value;
+      applyFormation(val);
+      applyTeamBFormation(val);
+    };
+
+    document.getElementById('addTeamABtn').onclick = () => {
+      let currentFieldCount = pieces.filter(p => p.team.startsWith('team-a') && !p.onBench && p.type === 'player').length;
+      if (currentFieldCount >= 11) {
+        alert('Der kan maksimalt være 11 spillere på banen for Blåt Hold.');
+        return;
+      }
+
+      const currentFormation = document.getElementById('formationSelect').value;
+      let coords = getCoordsForFormation(currentFormation, false);
+
+      // Find hvilke numre der allerede findes på banen for Hold A
+      let existingNums = new Set();
+      pieces.forEach(p => {
+        if (p.team.startsWith('team-a') && !p.onBench && p.type === 'player') {
+          existingNums.add(String(p.num));
+        }
+      });
+
+      // Find den første standard-koordinat i formationen, hvis nummer IKKE er på banen endnu
+      let targetCoord = coords.find(c => !existingNums.has(String(c.num)));
+      
+      // Hvis alle faste numre er der, finder vi bare det næste ledige tal
+      if (!targetCoord) {
+        let nextNum = 1;
+        while (existingNums.has(String(nextNum))) {
+          nextNum++;
+        }
+        targetCoord = { x: 0.5, y: 0.75, num: String(nextNum), name: 'Spiller', isGk: false };
+      }
+
+      let teamClass = targetCoord.isGk ? 'team-a gk' : 'team-a';
+      createPieceElement('player', canvas.width * targetCoord.x, canvas.height * targetCoord.y, teamClass, String(targetCoord.num), targetCoord.name || 'Spiller', null, false);
+    };
+
+    document.getElementById('addTeamBBtn').onclick = () => {
+      const currentFormation = document.getElementById('formationSelect').value;
+      applyTeamBFormation(currentFormation);
+    };
+
+    document.getElementById('addBallBtn').onclick = () => {
+      pieces.forEach(p => {
+        if (p.type === 'ball' && p.element) p.element.remove();
+      });
+      pieces = pieces.filter(p => p.type !== 'ball');
+
+      createPieceElement('ball', canvas.width / 2, canvas.height / 2);
+    };
+
+    document.getElementById('clearDrawingsBtn').onclick = () => {
+      drawings = [];
+      saveData();
+      redrawCanvas();
+    };
+    
+    document.getElementById('resetAllBtn').onclick = () => {
+      if (confirm('Vil du nulstille hele banen og alle navne?')) {
+        localStorage.removeItem('taktiktavle_data');
+        drawings = [];
+        pieces.forEach(p => {
+          if (p.element) p.element.remove();
+        });
+        pieces = [];
+        setupDefaultFormation();
+        initBench();
+        redrawCanvas();
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      loadData();
+    });
+  </script>
+</body>
+</html>
