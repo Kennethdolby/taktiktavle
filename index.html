@@ -405,11 +405,6 @@
   </footer>
 
   <script>
-    // Global fejl-fanger til mobilen
-    window.onerror = function(msg, url, line) {
-      alert("Fejl fundet: " + msg + " (Linje " + line + ")");
-    };
-
     const field = document.getElementById('field');
     const canvas = document.getElementById('pitch');
     const ctx = canvas.getContext('2d');
@@ -423,11 +418,12 @@
     let isInitialized = false;
 
     function resizeCanvas() {
-      const w = field.clientWidth || window.innerWidth;
-      const h = field.clientHeight || (window.innerHeight - 150);
+      // Sikr at vi altid har gyldige dimensioner, også på mobilen ved opstart
+      const w = field.clientWidth || window.innerWidth || 400;
+      const h = field.clientHeight || (window.innerHeight - 150) || 500;
       
-      canvas.width = w > 0 ? w : 400;
-      canvas.height = h > 0 ? h : 500;
+      canvas.width = w > 50 ? w : 400;
+      canvas.height = h > 50 ? h : 500;
 
       drawPitch();
       redrawCanvas();
@@ -984,4 +980,38 @@
         baseCoords = [
           {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
           {x: 0.25, y: 0.75, num: '2', name: 'Spiller'}, {x: 0.50, y: 0.80, num: '3', name: 'Spiller'}, {x: 0.75, y: 0.75, num: '4', name: 'Spiller'},
-          {x: 0.15, y: 0.50, num: '5', name: 'Spiller'}, {x:
+          {x: 0.15, y: 0.50, num: '5', name: 'Spiller'}, {x: 0.38, y: 0.55, num: '6', name: 'Spiller'}, {x: 0.62, y: 0.55, num: '7', name: 'Spiller'}, {x: 0.85, y: 0.50, num: '8', name: 'Spiller'},
+          {x: 0.35, y: 0.25, num: '10', name: 'Spiller'}, {x: 0.65, y: 0.25, num: '11', name: 'Spiller'},
+          {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}
+        ];
+      } else if (f === '3-4-3') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.25, y: 0.75, num: '2', name: 'Spiller'}, {x: 0.50, y: 0.80, num: '3', name: 'Spiller'}, {x: 0.75, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.15, y: 0.45, num: '5', name: 'Spiller'}, {x: 0.38, y: 0.50, num: '6', name: 'Spiller'}, {x: 0.62, y: 0.50, num: '7', name: 'Spiller'}, {x: 0.85, y: 0.45, num: '8', name: 'Spiller'},
+          {x: 0.20, y: 0.15, num: '11', name: 'Spiller'}, {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.80, y: 0.15, num: '7', name: 'Spiller'}
+        ];
+      } else if (f === '4-1-4-1') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.50, y: 0.55, num: '6', name: 'Spiller'},
+          {x: 0.12, y: 0.35, num: '11', name: 'Spiller'}, {x: 0.38, y: 0.40, num: '8', name: 'Spiller'}, {x: 0.62, y: 0.40, num: '10', name: 'Spiller'}, {x: 0.88, y: 0.35, num: '7', name: 'Spiller'},
+          {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}
+        ];
+      } else if (f === '4-3-2-1') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.30, y: 0.50, num: '6', name: 'Spiller'}, {x: 0.50, y: 0.55, num: '8', name: 'Spiller'}, {x: 0.70, y: 0.50, num: '10', name: 'Spiller'},
+          {x: 0.38, y: 0.25, num: '7', name: 'Spiller'}, {x: 0.62, y: 0.25, num: '11', name: 'Spiller'},
+          {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}
+        ];
+      } else if (f === '5-4-1') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.12, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.31, y: 0.75, num: '3', name: 'Spiller'},
+          {x: 0.50, y: 0.80, num: '4', name: 'Spiller'}, {x: 0.69, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.88, y: 0.70, num: '6', name: 'Spiller'},
+          {x: 0.15, y: 0.40, num: '11', name: 'Spiller'}, {x: 0.38, y: 0.45, num: '8', name: 'Spiller'}, {x: 0.62, y: 0.45, num: '10', name: 'Spiller'}, {x: 0.85
