@@ -418,11 +418,11 @@
     let isInitialized = false;
 
     function resizeCanvas() {
-      const w = field.clientWidth || window.innerWidth;
-      const h = field.clientHeight || (window.innerHeight - 150);
+      const w = field.clientWidth || window.innerWidth || 400;
+      const h = field.clientHeight || (window.innerHeight - 150) || 500;
       
-      canvas.width = w > 0 ? w : 400;
-      canvas.height = h > 0 ? h : 500;
+      canvas.width = w > 50 ? w : 400;
+      canvas.height = h > 50 ? h : 500;
 
       drawPitch();
       redrawCanvas();
@@ -432,68 +432,3 @@
 
     function drawPitch() {
       const w = canvas.width;
-      const h = canvas.height;
-      if (w === 0 || h === 0) return;
-      
-      ctx.fillStyle = '#15803d';
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#166534';
-      const stripeH = h / 10;
-      for (let i = 0; i < 10; i += 2) {
-        ctx.fillRect(0, i * stripeH, w, stripeH);
-      }
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(10, 10, w - 20, h - 20);
-
-      ctx.beginPath();
-      ctx.moveTo(10, h / 2);
-      ctx.lineTo(w - 10, h / 2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(w / 2, h / 2, Math.min(w, h) * 0.15, 0, Math.PI * 2);
-      ctx.stroke();
-
-      const boxW = w * 0.5;
-      const boxH = h * 0.15;
-      ctx.strokeRect((w - boxW) / 2, 10, boxW, boxH);
-      ctx.strokeRect((w - boxW) / 2, h - 10 - boxH, boxW, boxH);
-    }
-
-    function saveData() {
-      if (!isInitialized) return;
-      const state = {
-        pieces: pieces.map(p => ({
-          id: p.id,
-          x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
-          y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
-          type: p.type,
-          num: p.num,
-          name: p.name,
-          team: p.team,
-          onBench: p.onBench || false
-        })),
-        drawings: drawings
-      };
-      localStorage.setItem('taktiktavle_data', JSON.stringify(state));
-    }
-
-    function loadData() {
-      const data = localStorage.getItem('taktiktavle_data');
-      if (!data) {
-        setupDefaultFormation();
-        initBench();
-        isInitialized = true;
-        return;
-      }
-      try {
-        const state = JSON.parse(data);
-        drawings = state.drawings || [];
-        pieces = []; 
-        if (state.pieces && state.pieces.length > 0) {
-          state.pieces.forEach(p => {
-            if (!p.onBench) {
-              let posX = isNaN(p.x) ? canvas.width / 2 : p.x * canvas.width;
-              let posY = isNaN(p.y) ?
