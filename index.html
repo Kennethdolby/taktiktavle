@@ -405,6 +405,11 @@
   </footer>
 
   <script>
+    // Global fejl-fanger til mobilen
+    window.onerror = function(msg, url, line) {
+      alert("Fejl fundet: " + msg + " (Linje " + line + ")");
+    };
+
     const field = document.getElementById('field');
     const canvas = document.getElementById('pitch');
     const ctx = canvas.getContext('2d');
@@ -464,24 +469,30 @@
 
     function saveData() {
       if (!isInitialized) return;
-      const state = {
-        pieces: pieces.map(p => ({
-          id: p.id,
-          x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
-          y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
-          type: p.type,
-          num: p.num,
-          name: p.name,
-          team: p.team,
-          onBench: p.onBench || false
-        })),
-        drawings: drawings
-      };
-      localStorage.setItem('taktiktavle_data', JSON.stringify(state));
+      try {
+        const state = {
+          pieces: pieces.map(p => ({
+            id: p.id,
+            x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
+            y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
+            type: p.type,
+            num: p.num,
+            name: p.name,
+            team: p.team,
+            onBench: p.onBench || false
+          })),
+          drawings: drawings
+        };
+        localStorage.setItem('taktiktavle_data', JSON.stringify(state));
+      } catch (e) {}
     }
 
     function loadData() {
-      const data = localStorage.getItem('taktiktavle_data');
+      let data = null;
+      try {
+        data = localStorage.getItem('taktiktavle_data');
+      } catch (e) {}
+
       if (!data) {
         setupDefaultFormation();
         initBench();
@@ -886,4 +897,91 @@
 
       drawings.forEach(d => {
         const x1 = d.x1 * canvas.width;
-        const y1 = d.y
+        const y1 = d.y1 * canvas.height;
+        const x2 = d.x2 * canvas.width;
+        const y2 = d.y2 * canvas.height;
+
+        if (d.type === 'line') {
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        } else if (d.type === 'arrow') {
+          drawArrow(x1, y1, x2, y2);
+        }
+      });
+    }
+
+    function getCoordsForFormation(formation, isTeamB = false) {
+      let f = formation;
+      const mapY = (val) => {
+        let teamAY = 0.53 + (val * 0.39);
+        return isTeamB ? (1.0 - teamAY) : teamAY;
+      };
+
+      let baseCoords = [];
+      if (f === '4-3-3') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.25, y: 0.45, num: '8', name: 'Spiller'}, {x: 0.50, y: 0.50, num: '6', name: 'Spiller'}, {x: 0.75, y: 0.45, num: '10', name: 'Spiller'},
+          {x: 0.20, y: 0.20, num: '11', name: 'Spiller'}, {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.80, y: 0.20, num: '7', name: 'Spiller'}
+        ];
+      } else if (f === '4-2-3-1') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.35, y: 0.50, num: '6', name: 'Spiller'}, {x: 0.65, y: 0.50, num: '8', name: 'Spiller'},
+          {x: 0.20, y: 0.30, num: '11', name: 'Spiller'}, {x: 0.50, y: 0.25, num: '10', name: 'Spiller'}, {x: 0.80, y: 0.30, num: '7', name: 'Spiller'},
+          {x: 0.50, y: 0.05, num: '9', name: 'Spiller'}
+        ];
+      } else if (f === '4-4-2') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.15, y: 0.40, num: '11', name: 'Spiller'}, {x: 0.38, y: 0.45, num: '6', name: 'Spiller'},
+          {x: 0.62, y: 0.45, num: '10', name: 'Spiller'}, {x: 0.85, y: 0.40, num: '7', name: 'Spiller'},
+          {x: 0.38, y: 0.10, num: '9', name: 'Spiller'}, {x: 0.62, y: 0.10, num: '8', name: 'Spiller'}
+        ];
+      } else if (f === '4-1-2-1-2') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.15, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.38, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.62, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.85, y: 0.70, num: '3', name: 'Spiller'},
+          {x: 0.50, y: 0.55, num: '6', name: 'Spiller'},
+          {x: 0.25, y: 0.35, num: '8', name: 'Spiller'}, {x: 0.75, y: 0.35, num: '7', name: 'Spiller'},
+          {x: 0.50, y: 0.20, num: '10', name: 'Spiller'},
+          {x: 0.38, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.62, y: 0.05, num: '11', name: 'Spiller'}
+        ];
+      } else if (f === '3-5-2') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.25, y: 0.75, num: '3', name: 'Spiller'}, {x: 0.50, y: 0.80, num: '4', name: 'Spiller'}, {x: 0.75, y: 0.75, num: '5', name: 'Spiller'},
+          {x: 0.12, y: 0.45, num: '11', name: 'Spiller'}, {x: 0.33, y: 0.50, num: '6', name: 'Spiller'},
+          {x: 0.50, y: 0.55, num: '10', name: 'Spiller'}, {x: 0.67, y: 0.50, num: '8', name: 'Spiller'}, {x: 0.88, y: 0.45, num: '7', name: 'Spiller'},
+          {x: 0.38, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.62, y: 0.05, num: '14', name: 'Spiller'}
+        ];
+      } else if (f === '3-4-1-2') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.25, y: 0.75, num: '2', name: 'Spiller'}, {x: 0.50, y: 0.80, num: '3', name: 'Spiller'}, {x: 0.75, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.15, y: 0.45, num: '5', name: 'Spiller'}, {x: 0.38, y: 0.50, num: '6', name: 'Spiller'}, {x: 0.62, y: 0.50, num: '7', name: 'Spiller'}, {x: 0.85, y: 0.45, num: '8', name: 'Spiller'},
+          {x: 0.50, y: 0.25, num: '10', name: 'Spiller'},
+          {x: 0.38, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.62, y: 0.05, num: '11', name: 'Spiller'}
+        ];
+      } else if (f === '5-3-2') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.12, y: 0.70, num: '2', name: 'Spiller'}, {x: 0.31, y: 0.75, num: '3', name: 'Spiller'},
+          {x: 0.50, y: 0.80, num: '4', name: 'Spiller'}, {x: 0.69, y: 0.75, num: '5', name: 'Spiller'}, {x: 0.88, y: 0.70, num: '6', name: 'Spiller'},
+          {x: 0.25, y: 0.45, num: '8', name: 'Spiller'}, {x: 0.50, y: 0.50, num: '10', name: 'Spiller'}, {x: 0.75, y: 0.45, num: '6', name: 'Spiller'},
+          {x: 0.38, y: 0.05, num: '9', name: 'Spiller'}, {x: 0.62, y: 0.05, num: '7', name: 'Spiller'}
+        ];
+      } else if (f === '3-4-2-1') {
+        baseCoords = [
+          {x: 0.50, y: 1.00, num: '1', name: 'Målmand', isGk: true},
+          {x: 0.25, y: 0.75, num: '2', name: 'Spiller'}, {x: 0.50, y: 0.80, num: '3', name: 'Spiller'}, {x: 0.75, y: 0.75, num: '4', name: 'Spiller'},
+          {x: 0.15, y: 0.50, num: '5', name: 'Spiller'}, {x:
