@@ -639,4 +639,83 @@
       link.click();
     }
 
-    document.getElemen
+    document.getElementById('menuSaveBtn').onclick = () => {
+      closeSideMenu();
+      const modal = document.getElementById('saveLineupModal');
+      const input = document.getElementById('lineupNameInput');
+      input.value = '';
+      modal.style.display = 'flex';
+      input.focus();
+    };
+    document.getElementById('saveLineupCancelBtn').onclick = () => { document.getElementById('saveLineupModal').style.display = 'none'; };
+    document.getElementById('saveLineupOkBtn').onclick = () => {
+      const name = document.getElementById('lineupNameInput').value.trim();
+      if (!name) return alert('Indtast venligst et navn til opstillingen.');
+      const list = getSavedLineups();
+      list.unshift({ id: 'lineup_' + Date.now(), name, savedAt: new Date().toLocaleString('da-DK'), state: getCurrentStateSnapshot() });
+      setSavedLineups(list);
+      document.getElementById('saveLineupModal').style.display = 'none';
+    };
+
+    document.getElementById('menuLoadBtn').onclick = () => {
+      closeSideMenu();
+      renderSavedLineupsList();
+      document.getElementById('loadLineupModal').style.display = 'flex';
+    };
+    document.getElementById('loadLineupCloseBtn').onclick = () => { document.getElementById('loadLineupModal').style.display = 'none'; };
+
+    function renderSavedLineupsList() {
+      const container = document.getElementById('savedLineupsList');
+      const list = getSavedLineups();
+      container.innerHTML = '';
+      if (list.length === 0) {
+        container.innerHTML = '<p style="font-size:13px; color:#94a3b8; padding:8px 0;">Ingen gemte opstillinger endnu.</p>';
+        return;
+      }
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'saved-item';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'saved-item-name';
+        nameSpan.innerText = item.name;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'saved-item-actions';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'saved-load-btn';
+        loadBtn.innerText = 'Hent';
+        loadBtn.onclick = () => { applyStateSnapshot(item.state); document.getElementById('loadLineupModal').style.display = 'none'; };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'saved-del-btn';
+        delBtn.innerText = '🗑️';
+        delBtn.onclick = () => {
+          if (confirm('Slet gemt opstilling "' + item.name + '"?')) {
+            setSavedLineups(getSavedLineups().filter(x => x.id !== item.id));
+            renderSavedLineupsList();
+          }
+        };
+
+        actionsDiv.appendChild(loadBtn); actionsDiv.appendChild(delBtn);
+        row.appendChild(nameSpan); actionsDiv.appendChild(actionsDiv);
+        container.appendChild(row);
+      });
+    }
+
+    function clearAllPiecesFromDOM() {
+      field.querySelectorAll('.piece').forEach(el => el.remove());
+      pieces.forEach(p => { if (p.element) p.element.remove(); });
+      pieces = [];
+    }
+
+    function applyStateSnapshot(state) {
+      if (!state) return;
+      clearAllPiecesFromDOM();
+      drawings = Array.isArray(state.drawings) ? state.drawings : [];
+      if (state.formation) document.getElementById('formationSelect').value = state.formation;
+      if (Array.isArray(state.pieces) && state.pieces.length > 0) {
+        deduplicatePieces(state.pieces).forEach(p => {
+          const rx = typeof p.x === 'number' && !isNaN(p.x) ? Math.max(0.03, Math.min(0.97, p.x)) : 0.5;
+          const ry = typeof p.y === 'number' && !isNaN(p.y) ? Math.max(0.03, Math.min(0.97, p.y)) : 0.7;
+          createPieceElement(
