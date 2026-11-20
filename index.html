@@ -604,10 +604,8 @@
       snap.height = h;
       const sctx = snap.getContext('2d');
 
-      // Tegn bane og tegninger
       sctx.drawImage(canvas, 0, 0);
 
-      // Tegn brikker på banen
       pieces.filter(p => !p.onBench && p.element).forEach(p => {
         const px = parseFloat(p.element.style.left);
         const py = parseFloat(p.element.style.top);
@@ -936,6 +934,9 @@
         const state = JSON.parse(data);
         drawings = state.drawings || [];
         pieces = []; 
+        if (state.formation) {
+          document.getElementById('formationSelect').value = state.formation;
+        }
         if (state.pieces && state.pieces.length > 0) {
           state.pieces.forEach(p => {
             if (!p.onBench) {
@@ -958,7 +959,7 @@
     }
 
     function initBench() {
-      let benchPlayers = pieces.filter(p => p.team === 'team-a' && p.onBench);
+      let benchPlayers = pieces.filter(p => p.team.startsWith('team-a') && p.onBench);
       if (benchPlayers.length === 0) {
         for (let i = 1; i <= 5; i++) {
           createPieceElement('player', 0, 0, 'team-a', (11 + i).toString(), `Reserve ${i}`, null, true);
@@ -969,7 +970,7 @@
 
     function renderBenchUI() {
       benchSlots.innerHTML = '';
-      let benchPlayers = pieces.filter(p => p.team === 'team-a' && p.onBench);
+      let benchPlayers = pieces.filter(p => p.team.startsWith('team-a') && p.onBench);
       
       benchPlayers.sort((a, b) => (parseInt(a.num) || 0) - (parseInt(b.num) || 0));
 
@@ -1497,28 +1498,31 @@
     }
 
     function applyFormation(formation) {
-      let customNames = {};
-      pieces.forEach(p => {
-        if (p.team.startsWith('team-a') && !p.onBench && p.num && p.name !== 'Spiller') {
-          customNames[p.num] = p.name;
-        }
-      });
-
-      pieces.forEach(p => {
-        if (p.team.startsWith('team-a') && !p.onBench) {
-          if (p.element) p.element.remove();
-        }
-      });
-      pieces = pieces.filter(p => !(p.team.startsWith('team-a') && !p.onBench));
-
       const w = canvas.width;
       const h = canvas.height;
+      const coords = getCoordsForFormation(formation, false);
 
-      let coords = getCoordsForFormation(formation, false);
+      // Find eksisterende spillere på banen for Blåt Hold uden at ændre deres numre, navne eller ID
+      const activeTeamA = pieces.filter(p => p.team.startsWith('team-a') && !p.onBench && p.type === 'player');
+
+      if (activeTeamA.length > 0) {
+        activeTeamA.forEach((player, idx) => {
+          const slot = coords[idx] || { x: 0.5, y: 0.75, isGk: false };
+          player.team = slot.isGk ? 'team-a gk' : 'team-a';
+          if (player.element) {
+            player.element.className = `piece ${player.team}`;
+            player.element.style.left = `${w * slot.x}px`;
+            player.element.style.top = `${h * slot.y}px`;
+          }
+        });
+        saveData();
+        return;
+      }
+
+      // Hvis der slet ikke er nogen Blåt Hold-spillere på banen endnu (f.eks. ved ren opstart)
       coords.forEach((c) => {
         let teamClass = c.isGk ? 'team-a gk' : 'team-a';
-        let name = customNames[c.num] || c.name;
-        createPieceElement('player', w * c.x, h * c.y, teamClass, c.num, name, null, false);
+        createPieceElement('player', w * c.x, h * c.y, teamClass, c.num, c.name, null, false);
       });
 
       saveData();
