@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-  <title>Taktiktavle Pro</title>
+  <title>Taktiktavle Pro v2</title>
   <style>
     * {
       box-sizing: border-box;
@@ -25,6 +25,15 @@
       display: flex;
       flex-direction: column;
     }
+    #debugBanner {
+      display: none;
+      background: #991b1b;
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 10px;
+      z-index: 2000;
+      flex-shrink: 0;
+    }
     header {
       background: #1e293b;
       padding: 8px 10px;
@@ -35,11 +44,13 @@
       z-index: 20;
       gap: 6px;
       flex-shrink: 0;
+      width: 100%;
     }
     .header-left {
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-shrink: 0;
     }
     .menu-btn {
       background: #334155;
@@ -66,6 +77,7 @@
       padding: 2px;
       border-radius: 12px;
       border: 1px solid #334155;
+      flex-shrink: 0;
     }
     .tool-btn {
       background: transparent;
@@ -76,6 +88,7 @@
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
     }
     .tool-btn.active {
       background: #0284c7;
@@ -84,6 +97,7 @@
     .header-actions {
       display: flex;
       gap: 5px;
+      flex-shrink: 0;
     }
     .btn-icon, .btn-select {
       background: #334155;
@@ -217,12 +231,14 @@
       z-index: 10;
       min-height: 54px;
       flex-shrink: 0;
+      width: 100%;
     }
     .bench-label {
       font-size: 11px;
       color: #94a3b8;
       font-weight: bold;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .bench-slots {
       display: flex;
@@ -256,206 +272,4 @@
       border: 2px solid rgba(255,255,255,0.85);
       box-shadow: 0 3px 5px rgba(0,0,0,0.35);
     }
-    .team-a .player-circle { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
-    .team-b .player-circle { background: radial-gradient(circle, #ef4444, #b91c1c); }
-    .team-b.gk .player-circle { background: radial-gradient(circle, #9333ea, #6b21a8); }
-    .gk .player-circle { background: radial-gradient(circle, #10b981, #047857); }
-
-    .player-label {
-      background: rgba(15, 23, 42, 0.88);
-      color: #fff;
-      font-size: 10px;
-      padding: 1px 5px;
-      border-radius: 4px;
-      margin-top: 2px;
-      white-space: nowrap;
-      border: 1px solid rgba(255,255,255,0.2);
-      text-align: center;
-    }
-    .ball {
-      width: 22px;
-      height: 22px;
-      background: #fff;
-      border-radius: 50%;
-      border: 2px solid #000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 1000;
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #1e293b;
-      border: 1px solid #334155;
-      width: 90%;
-      max-width: 340px;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      color: #f8fafc;
-    }
-    .modal-content h3 {
-      font-size: 18px;
-      margin-bottom: 16px;
-      color: #38bdf8;
-    }
-    .modal-field {
-      margin-bottom: 14px;
-    }
-    .modal-field label {
-      display: block;
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 4px;
-    }
-    .modal-field input, .modal-field select {
-      width: 100%;
-      background: #0f172a;
-      border: 1px solid #475569;
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .modal-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .modal-btn-cancel, .modal-btn-ok, .modal-btn-delete, .modal-btn-sub {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 13px;
-      cursor: pointer;
-      border: none;
-    }
-    .modal-btn-cancel { background: #334155; color: #f8fafc; }
-    .modal-btn-delete { background: #dc2626; color: #fff; }
-    .modal-btn-sub { background: #0284c7; color: #fff; }
-    .modal-btn-ok { background: #eab308; color: #0f172a; }
-
-    footer {
-      background: #1e293b;
-      padding: 8px;
-      display: flex;
-      justify-content: space-around;
-      border-top: 1px solid #334155;
-      z-index: 10;
-      flex-shrink: 0;
-    }
-    .action-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-    .btn-icon-circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #334155;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <div class="header-left">
-      <button class="menu-btn" id="menuBtn" title="Menu">☰</button>
-      <div class="title">⚽ Taktik</div>
-    </div>
-
-    <div class="header-center">
-      <button class="tool-btn active" id="toolMove">✋ Flyt</button>
-      <button class="tool-btn" id="toolLine">✏️ Linje</button>
-      <button class="tool-btn" id="toolArrow">➔ Pil</button>
-    </div>
-
-    <div class="header-actions">
-      <select class="btn-select" id="formationSelect" title="Vælg Formation">
-        <option value="4-3-3" selected>4-3-3</option>
-        <option value="4-2-3-1">4-2-3-1</option>
-        <option value="4-4-2">4-4-2 (Flad)</option>
-        <option value="4-1-2-1-2">4-4-2 (Diamant)</option>
-        <option value="3-5-2">3-5-2</option>
-        <option value="3-4-1-2">3-4-1-2</option>
-        <option value="5-3-2">5-3-2</option>
-        <option value="3-4-2-1">3-4-2-1</option>
-        <option value="3-4-3">3-4-3</option>
-        <option value="4-1-4-1">4-1-4-1</option>
-        <option value="4-3-2-1">4-3-2-1 (Juletræ)</option>
-        <option value="5-4-1">5-4-1</option>
-        <option value="5-2-3">5-2-3</option>
-        <option value="5-2-1-2">5-2-1-2</option>
-        <option value="5-1-3-1">5-1-3-1</option>
-        <option value="5-3-1-1">5-3-1-1</option>
-      </select>
-      <button class="btn-icon" id="clearDrawingsBtn" title="Ryd tegninger">🧹</button>
-      <button class="btn-icon" id="resetAllBtn" title="Nulstil alt">🗑️</button>
-    </div>
-  </header>
-
-  <div class="side-menu-backdrop" id="sideMenuBackdrop"></div>
-  <nav class="side-menu" id="sideMenu">
-    <button class="side-menu-item" id="menuShareBtn">📤 Del opstilling</button>
-    <button class="side-menu-item" id="menuSaveBtn">💾 Gem opstilling</button>
-    <button class="side-menu-item" id="menuLoadBtn">📂 Hent gemte opstillinger</button>
-  </nav>
-
-  <div class="field-container" id="field">
-    <canvas id="pitch"></canvas>
-  </div>
-
-  <div class="bench-bar">
-    <span class="bench-label">Bænk:</span>
-    <div class="bench-slots" id="benchSlots"></div>
-  </div>
-
-  <div id="saveLineupModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3>Gem opstilling</h3>
-      <div class="modal-field">
-        <label>Navn på opstilling</label>
-        <input type="text" id="lineupNameInput" placeholder="F.eks. Kampplan 4-3-3 eller Pres">
-      </div>
-      <div class="modal-buttons">
-        <button id="saveLineupCancelBtn" class="modal-btn-cancel">Afbryd</button>
-        <button id="saveLineupOkBtn" class="modal-btn-ok">Gem</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="loadLineupModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3>Gemte opstillinger</h3>
-      <div id="savedLineupsList" class="saved-list"></div>
-      <div class="modal-buttons">
-        <button id="loadLineupCloseBtn" class="modal-btn-cancel">Luk</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="playerModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 id="modalTitle">Red
+    .team-a .player-circle { background: radial-gradient(circle
