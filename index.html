@@ -31,8 +31,29 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #334155;
-      z-index: 10;
+      z-index: 20;
       gap: 6px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .menu-btn {
+      background: #334155;
+      border: none;
+      color: #f8fafc;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .menu-btn:active {
+      background: #475569;
     }
     .title {
       font-size: 15px;
@@ -80,6 +101,100 @@
     }
     .btn-icon:active, .btn-select:active {
       background: #475569;
+    }
+
+    /* Dropdown / Menu under de 3 streger */
+    .side-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 900;
+      display: none;
+    }
+    .side-menu {
+      position: fixed;
+      top: 50px;
+      left: 10px;
+      width: 240px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+      z-index: 950;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-menu-item {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #334155;
+      color: #f8fafc;
+      padding: 13px 14px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .side-menu-item:last-child {
+      border-bottom: none;
+    }
+    .side-menu-item:active, .side-menu-item:hover {
+      background: #334155;
+    }
+
+    /* Gemte opstillinger liste i modal */
+    .saved-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+    .saved-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .saved-item-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: #f8fafc;
+      word-break: break-word;
+    }
+    .saved-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .saved-load-btn {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .saved-del-btn {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
     
     /* Banen og Container */
@@ -298,7 +413,10 @@
 <body>
 
   <header>
-    <div class="title">⚽ Taktik</div>
+    <div class="header-left">
+      <button class="menu-btn" id="menuBtn" title="Menu">☰</button>
+      <div class="title">⚽ Taktik</div>
+    </div>
     
     <div class="header-center">
       <button class="tool-btn active" id="toolMove">✋ Flyt</button>
@@ -330,6 +448,14 @@
     </div>
   </header>
 
+  <!-- Menu under de 3 streger -->
+  <div class="side-menu-backdrop" id="sideMenuBackdrop"></div>
+  <nav class="side-menu" id="sideMenu">
+    <button class="side-menu-item" id="menuShareBtn">📤 Del opstilling</button>
+    <button class="side-menu-item" id="menuSaveBtn">💾 Gem opstilling</button>
+    <button class="side-menu-item" id="menuLoadBtn">📂 Hent gemte opstillinger</button>
+  </nav>
+
   <div class="field-container" id="field">
     <canvas id="pitch"></canvas>
   </div>
@@ -338,6 +464,32 @@
   <div class="bench-bar">
     <span class="bench-label">Bænk:</span>
     <div class="bench-slots" id="benchSlots"></div>
+  </div>
+
+  <!-- Modal til at gemme opstilling -->
+  <div id="saveLineupModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>Gem opstilling</h3>
+      <div class="modal-field">
+        <label>Navn på opstilling</label>
+        <input type="text" id="lineupNameInput" placeholder="F.eks. Kampplan 4-3-3 eller Pres">
+      </div>
+      <div class="modal-buttons">
+        <button id="saveLineupCancelBtn" class="modal-btn-cancel">Afbryd</button>
+        <button id="saveLineupOkBtn" class="modal-btn-ok">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal til at hente gemte opstillinger -->
+  <div id="loadLineupModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>Gemte opstillinger</h3>
+      <div id="savedLineupsList" class="saved-list"></div>
+      <div class="modal-buttons">
+        <button id="loadLineupCloseBtn" class="modal-btn-cancel">Luk</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal til redigering af spiller -->
@@ -410,6 +562,8 @@
     const ctx = canvas.getContext('2d');
     const benchSlots = document.getElementById('benchSlots');
 
+    const SAVED_LINEUPS_KEY = 'taktiktavle_saved_lineups';
+
     let currentTool = 'move';
     let pieces = [];
     let drawings = [];
@@ -417,6 +571,304 @@
     let startX = 0, startY = 0;
     let isInitialized = false;
 
+    /* --- HAMBURGER MENU (3 STREGER) --- */
+    const menuBtn = document.getElementById('menuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const sideMenuBackdrop = document.getElementById('sideMenuBackdrop');
+
+    function openSideMenu() {
+      sideMenu.style.display = 'flex';
+      sideMenuBackdrop.style.display = 'block';
+    }
+
+    function closeSideMenu() {
+      sideMenu.style.display = 'none';
+      sideMenuBackdrop.style.display = 'none';
+    }
+
+    menuBtn.onclick = () => {
+      if (sideMenu.style.display === 'flex') {
+        closeSideMenu();
+      } else {
+        openSideMenu();
+      }
+    };
+    sideMenuBackdrop.onclick = closeSideMenu;
+
+    /* --- DEL OPSTILLING VIA APPS --- */
+    async function buildPitchSnapshotCanvas() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const snap = document.createElement('canvas');
+      snap.width = w;
+      snap.height = h;
+      const sctx = snap.getContext('2d');
+
+      // Tegn bane og tegninger
+      sctx.drawImage(canvas, 0, 0);
+
+      // Tegn brikker på banen
+      pieces.filter(p => !p.onBench && p.element).forEach(p => {
+        const px = parseFloat(p.element.style.left);
+        const py = parseFloat(p.element.style.top);
+        if (isNaN(px) || isNaN(py)) return;
+
+        if (p.type === 'ball') {
+          sctx.beginPath();
+          sctx.arc(px, py, 11, 0, Math.PI * 2);
+          sctx.fillStyle = '#ffffff';
+          sctx.fill();
+          sctx.lineWidth = 2;
+          sctx.strokeStyle = '#000000';
+          sctx.stroke();
+
+          sctx.font = '12px sans-serif';
+          sctx.textAlign = 'center';
+          sctx.textBaseline = 'middle';
+          sctx.fillStyle = '#000000';
+          sctx.fillText('⚽', px, py + 0.5);
+        } else {
+          let gradColors = ['#3b82f6', '#1d4ed8'];
+          if (p.team === 'team-b') gradColors = ['#ef4444', '#b91c1c'];
+          else if (p.team === 'team-b gk') gradColors = ['#9333ea', '#6b21a8'];
+          else if (p.team === 'team-a gk') gradColors = ['#10b981', '#047857'];
+
+          const grad = sctx.createRadialGradient(px, py, 2, px, py, 15);
+          grad.addColorStop(0, gradColors[0]);
+          grad.addColorStop(1, gradColors[1]);
+
+          sctx.beginPath();
+          sctx.arc(px, py, 15, 0, Math.PI * 2);
+          sctx.fillStyle = grad;
+          sctx.fill();
+          sctx.lineWidth = 2;
+          sctx.strokeStyle = 'rgba(255,255,255,0.85)';
+          sctx.stroke();
+
+          sctx.font = 'bold 12px system-ui, sans-serif';
+          sctx.textAlign = 'center';
+          sctx.textBaseline = 'middle';
+          sctx.fillStyle = '#ffffff';
+          sctx.fillText(String(p.num), px, py);
+
+          if (p.name) {
+            sctx.font = '10px system-ui, sans-serif';
+            const textW = sctx.measureText(p.name).width;
+            const boxW = textW + 10;
+            const boxH = 14;
+            const boxX = px - boxW / 2;
+            const boxY = py + 17;
+
+            sctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+            sctx.fillRect(boxX, boxY, boxW, boxH);
+            sctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            sctx.lineWidth = 1;
+            sctx.strokeRect(boxX, boxY, boxW, boxH);
+
+            sctx.fillStyle = '#ffffff';
+            sctx.fillText(p.name, px, boxY + boxH / 2 + 0.5);
+          }
+        }
+      });
+
+      return snap;
+    }
+
+    document.getElementById('menuShareBtn').onclick = async () => {
+      closeSideMenu();
+      const formation = document.getElementById('formationSelect').value;
+      const snapCanvas = await buildPitchSnapshotCanvas();
+
+      snapCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `opstilling-${formation}.png`, { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: `Taktik - ${formation}`,
+              text: `Opstilling (${formation})`,
+              files: [file]
+            });
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              downloadSnapshot(snapCanvas, formation);
+            }
+          }
+        } else if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Taktik - ${formation}`,
+              text: `Opstilling (${formation})`
+            });
+          } catch (err) {}
+        } else {
+          downloadSnapshot(snapCanvas, formation);
+        }
+      }, 'image/png');
+    };
+
+    function downloadSnapshot(snapCanvas, formation) {
+      const link = document.createElement('a');
+      link.download = `opstilling-${formation}.png`;
+      link.href = snapCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    /* --- GEM OG HENT OPSTILLINGER --- */
+    function getSavedLineups() {
+      try {
+        const raw = localStorage.getItem(SAVED_LINEUPS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setSavedLineups(list) {
+      try {
+        localStorage.setItem(SAVED_LINEUPS_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+
+    function getCurrentStateSnapshot() {
+      return {
+        formation: document.getElementById('formationSelect').value,
+        pieces: pieces.map(p => ({
+          id: p.id,
+          x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
+          y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
+          type: p.type,
+          num: p.num,
+          name: p.name,
+          team: p.team,
+          onBench: p.onBench || false
+        })),
+        drawings: drawings
+      };
+    }
+
+    document.getElementById('menuSaveBtn').onclick = () => {
+      closeSideMenu();
+      const modal = document.getElementById('saveLineupModal');
+      const input = document.getElementById('lineupNameInput');
+      input.value = '';
+      modal.style.display = 'flex';
+      input.focus();
+    };
+
+    document.getElementById('saveLineupCancelBtn').onclick = () => {
+      document.getElementById('saveLineupModal').style.display = 'none';
+    };
+
+    document.getElementById('saveLineupOkBtn').onclick = () => {
+      const input = document.getElementById('lineupNameInput');
+      const name = input.value.trim();
+      if (!name) {
+        alert('Indtast venligst et navn til opstillingen.');
+        return;
+      }
+
+      const list = getSavedLineups();
+      list.unshift({
+        id: 'lineup_' + Date.now(),
+        name: name,
+        savedAt: new Date().toLocaleString('da-DK'),
+        state: getCurrentStateSnapshot()
+      });
+      setSavedLineups(list);
+      document.getElementById('saveLineupModal').style.display = 'none';
+    };
+
+    document.getElementById('menuLoadBtn').onclick = () => {
+      closeSideMenu();
+      renderSavedLineupsList();
+      document.getElementById('loadLineupModal').style.display = 'flex';
+    };
+
+    document.getElementById('loadLineupCloseBtn').onclick = () => {
+      document.getElementById('loadLineupModal').style.display = 'none';
+    };
+
+    function renderSavedLineupsList() {
+      const container = document.getElementById('savedLineupsList');
+      const list = getSavedLineups();
+      container.innerHTML = '';
+
+      if (list.length === 0) {
+        container.innerHTML = '<p style="font-size:13px; color:#94a3b8; padding:8px 0;">Ingen gemte opstillinger endnu.</p>';
+        return;
+      }
+
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'saved-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'saved-item-name';
+        nameSpan.innerText = item.name;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'saved-item-actions';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'saved-load-btn';
+        loadBtn.innerText = 'Hent';
+        loadBtn.onclick = () => {
+          applyStateSnapshot(item.state);
+          document.getElementById('loadLineupModal').style.display = 'none';
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'saved-del-btn';
+        delBtn.innerText = '🗑️';
+        delBtn.onclick = () => {
+          if (confirm(`Slet gemt opstilling "${item.name}"?`)) {
+            const updated = getSavedLineups().filter(x => x.id !== item.id);
+            setSavedLineups(updated);
+            renderSavedLineupsList();
+          }
+        };
+
+        actionsDiv.appendChild(loadBtn);
+        actionsDiv.appendChild(delBtn);
+        row.appendChild(nameSpan);
+        row.appendChild(actionsDiv);
+        container.appendChild(row);
+      });
+    }
+
+    function applyStateSnapshot(state) {
+      if (!state) return;
+
+      pieces.forEach(p => {
+        if (p.element) p.element.remove();
+      });
+      pieces = [];
+      drawings = state.drawings || [];
+
+      if (state.formation) {
+        document.getElementById('formationSelect').value = state.formation;
+      }
+
+      if (state.pieces && state.pieces.length > 0) {
+        state.pieces.forEach(p => {
+          if (!p.onBench) {
+            let posX = isNaN(p.x) ? canvas.width / 2 : p.x * canvas.width;
+            let posY = isNaN(p.y) ? canvas.height / 2 : p.y * canvas.height;
+            createPieceElement(p.type, posX, posY, p.team, p.num, p.name, p.id, false);
+          } else {
+            createPieceElement(p.type, 0, 0, p.team, p.num, p.name, p.id, true);
+          }
+        });
+      }
+
+      initBench();
+      redrawCanvas();
+      saveData();
+    }
+
+    /* --- BANE OG DATA --- */
     function resizeCanvas() {
       const w = field.clientWidth || window.innerWidth || 400;
       const h = field.clientHeight || (window.innerHeight - 150) || 500;
@@ -465,20 +917,7 @@
     function saveData() {
       if (!isInitialized) return;
       try {
-        const state = {
-          pieces: pieces.map(p => ({
-            id: p.id,
-            x: p.element ? parseFloat(p.element.style.left) / canvas.width : 0.5,
-            y: p.element ? parseFloat(p.element.style.top) / canvas.height : 0.7,
-            type: p.type,
-            num: p.num,
-            name: p.name,
-            team: p.team,
-            onBench: p.onBench || false
-          })),
-          drawings: drawings
-        };
-        localStorage.setItem('taktiktavle_data', JSON.stringify(state));
+        localStorage.setItem('taktiktavle_data', JSON.stringify(getCurrentStateSnapshot()));
       } catch (e) {}
     }
 
@@ -1198,7 +1637,6 @@
       }
     };
 
-    // Sikker opstart uden fejl
     window.addEventListener('load', () => {
       resizeCanvas();
       loadData();
