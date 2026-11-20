@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-  <title>Taktiktavle Pro v2</title>
+  <title>Taktiktavle Pro</title>
   <style>
     * {
       box-sizing: border-box;
@@ -25,15 +25,6 @@
       display: flex;
       flex-direction: column;
     }
-    #debugBanner {
-      display: none;
-      background: #991b1b;
-      color: #fff;
-      font-size: 12px;
-      padding: 6px 10px;
-      z-index: 2000;
-      flex-shrink: 0;
-    }
     header {
       background: #1e293b;
       padding: 8px 10px;
@@ -44,13 +35,11 @@
       z-index: 20;
       gap: 6px;
       flex-shrink: 0;
-      width: 100%;
     }
     .header-left {
       display: flex;
       align-items: center;
       gap: 6px;
-      flex-shrink: 0;
     }
     .menu-btn {
       background: #334155;
@@ -77,7 +66,6 @@
       padding: 2px;
       border-radius: 12px;
       border: 1px solid #334155;
-      flex-shrink: 0;
     }
     .tool-btn {
       background: transparent;
@@ -97,7 +85,6 @@
     .header-actions {
       display: flex;
       gap: 5px;
-      flex-shrink: 0;
     }
     .btn-icon, .btn-select {
       background: #334155;
@@ -112,7 +99,6 @@
       cursor: pointer;
       padding: 0 8px;
     }
-
     .side-menu-backdrop {
       position: fixed;
       inset: 0;
@@ -143,15 +129,11 @@
       text-align: left;
       font-size: 14px;
       font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
       cursor: pointer;
     }
     .side-menu-item:last-child {
       border-bottom: none;
     }
-
     .saved-list {
       display: flex;
       flex-direction: column;
@@ -201,7 +183,6 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     .field-container {
       flex: 1 1 auto;
       min-height: 120px;
@@ -219,7 +200,6 @@
       z-index: 1;
       display: block;
     }
-
     .bench-bar {
       background: #0f172a;
       border-top: 1px solid #334155;
@@ -231,7 +211,6 @@
       z-index: 10;
       min-height: 54px;
       flex-shrink: 0;
-      width: 100%;
     }
     .bench-label {
       font-size: 11px;
@@ -245,7 +224,6 @@
       gap: 8px;
       align-items: center;
     }
-
     .piece {
       position: absolute;
       z-index: 10;
@@ -272,4 +250,393 @@
       border: 2px solid rgba(255,255,255,0.85);
       box-shadow: 0 3px 5px rgba(0,0,0,0.35);
     }
-    .team-a .player-circle { background: radial-gradient(circle
+    .team-a .player-circle { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
+    .team-b .player-circle { background: radial-gradient(circle, #ef4444, #b91c1c); }
+    .team-b.gk .player-circle { background: radial-gradient(circle, #9333ea, #6b21a8); }
+    .gk .player-circle { background: radial-gradient(circle, #10b981, #047857); }
+    .player-label {
+      background: rgba(15, 23, 42, 0.88);
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-top: 2px;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.2);
+      text-align: center;
+    }
+    .ball {
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      border: 2px solid #000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #1e293b;
+      border: 1px solid #334155;
+      width: 90%;
+      max-width: 340px;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      color: #f8fafc;
+    }
+    .modal-content h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #38bdf8;
+    }
+    .modal-field {
+      margin-bottom: 14px;
+    }
+    .modal-field label {
+      display: block;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .modal-field input, .modal-field select {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-btn-cancel, .modal-btn-ok, .modal-btn-delete, .modal-btn-sub {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+    }
+    .modal-btn-cancel { background: #334155; color: #f8fafc; }
+    .modal-btn-delete { background: #dc2626; color: #fff; }
+    .modal-btn-sub { background: #0284c7; color: #fff; }
+    .modal-btn-ok { background: #eab308; color: #0f172a; }
+    footer {
+      background: #1e293b;
+      padding: 8px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #334155;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-icon-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <button class="menu-btn" id="menuBtn" title="Menu">☰</button>
+      <div class="title">⚽ Taktik</div>
+    </div>
+    <div class="header-center">
+      <button class="tool-btn active" id="toolMove">✋ Flyt</button>
+      <button class="tool-btn" id="toolLine">✏️ Linje</button>
+      <button class="tool-btn" id="toolArrow">➔ Pil</button>
+    </div>
+    <div class="header-actions">
+      <select class="btn-select" id="formationSelect" title="Vælg Formation">
+        <option value="4-3-3" selected>4-3-3</option>
+        <option value="4-2-3-1">4-2-3-1</option>
+        <option value="4-4-2">4-4-2 (Flad)</option>
+        <option value="4-1-2-1-2">4-4-2 (Diamant)</option>
+        <option value="3-5-2">3-5-2</option>
+        <option value="3-4-1-2">3-4-1-2</option>
+        <option value="5-3-2">5-3-2</option>
+        <option value="3-4-2-1">3-4-2-1</option>
+        <option value="3-4-3">3-4-3</option>
+        <option value="4-1-4-1">4-1-4-1</option>
+        <option value="4-3-2-1">4-3-2-1 (Juletræ)</option>
+        <option value="5-4-1">5-4-1</option>
+        <option value="5-2-3">5-2-3</option>
+        <option value="5-2-1-2">5-2-1-2</option>
+        <option value="5-1-3-1">5-1-3-1</option>
+        <option value="5-3-1-1">5-3-1-1</option>
+      </select>
+      <button class="btn-icon" id="clearDrawingsBtn" title="Ryd tegninger">🧹</button>
+      <button class="btn-icon" id="resetAllBtn" title="Nulstil alt">🗑️</button>
+    </div>
+  </header>
+
+  <div class="side-menu-backdrop" id="sideMenuBackdrop"></div>
+  <nav class="side-menu" id="sideMenu">
+    <button class="side-menu-item" id="menuShareBtn">📤 Del opstilling</button>
+    <button class="side-menu-item" id="menuSaveBtn">💾 Gem opstilling</button>
+    <button class="side-menu-item" id="menuLoadBtn">📂 Hent gemte opstillinger</button>
+  </nav>
+
+  <div class="field-container" id="field">
+    <canvas id="pitch"></canvas>
+  </div>
+
+  <div class="bench-bar">
+    <span class="bench-label">Bænk:</span>
+    <div class="bench-slots" id="benchSlots"></div>
+  </div>
+
+  <div id="saveLineupModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Gem opstilling</h3>
+      <div class="modal-field">
+        <label>Navn på opstilling</label>
+        <input type="text" id="lineupNameInput" placeholder="F.eks. Kampplan 4-3-3 eller Pres">
+      </div>
+      <div class="modal-buttons">
+        <button id="saveLineupCancelBtn" class="modal-btn-cancel">Afbryd</button>
+        <button id="saveLineupOkBtn" class="modal-btn-ok">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadLineupModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Gemte opstillinger</h3>
+      <div id="savedLineupsList" class="saved-list"></div>
+      <div class="modal-buttons">
+        <button id="loadLineupCloseBtn" class="modal-btn-cancel">Luk</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="playerModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="modalTitle">Rediger spiller</h3>
+      <div class="modal-field">
+        <label>Spillernavn</label>
+        <input type="text" id="modalNameInput">
+      </div>
+      <div class="modal-field">
+        <label>Nummer</label>
+        <input type="text" id="modalNumInput">
+      </div>
+      <div class="modal-buttons">
+        <button id="modalDeleteBtn" class="modal-btn-delete">Slet</button>
+        <button id="modalCancelBtn" class="modal-btn-cancel">Afbryd</button>
+        <button id="modalOkBtn" class="modal-btn-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="benchActionModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="benchActionTitle">Bænkespiller</h3>
+      <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">Hvad vil du gøre med denne bænkespiller?</p>
+      <div class="modal-buttons" style="flex-direction: column; gap: 8px;">
+        <button id="benchEditBtn" class="modal-btn-ok">✏️ Rediger navn / nummer</button>
+        <button id="benchSubBtn" class="modal-btn-sub">🔄 Skift ind på banen</button>
+        <button id="benchActionCancelBtn" class="modal-btn-cancel" style="margin-top: 8px;">Afbryd</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="substituteModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Foretag udskiftning</h3>
+      <p id="substituteBenchPlayerInfo" style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;"></p>
+      <div class="modal-field">
+        <label>Skift med spiller på banen:</label>
+        <select id="modalFieldPlayerSelect"></select>
+      </div>
+      <div class="modal-buttons">
+        <button id="subModalCancelBtn" class="modal-btn-cancel">Afbryd</button>
+        <button id="subModalOkBtn" class="modal-btn-ok">Foretag skift</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <button class="action-btn" id="addTeamABtn">
+      <div class="btn-icon-circle" style="background:#1d4ed8; color:#fff;">+</div>
+      <span>Blåt Hold</span>
+    </button>
+    <button class="action-btn" id="addTeamBBtn">
+      <div class="btn-icon-circle" style="background:#b91c1c; color:#fff;">+</div>
+      <span>Rødt Hold</span>
+    </button>
+    <button class="action-btn" id="addBallBtn">
+      <div class="btn-icon-circle" style="background:#fff; color:#000;">⚽</div>
+      <span>Bold</span>
+    </button>
+  </footer>
+
+  <script>
+    const field = document.getElementById('field');
+    const canvas = document.getElementById('pitch');
+    const ctx = canvas.getContext('2d');
+    const benchSlots = document.getElementById('benchSlots');
+
+    const SAVED_LINEUPS_KEY = 'taktiktavle_saved_lineups';
+    const STATE_KEY = 'taktiktavle_data';
+
+    let currentTool = 'move';
+    let pieces = [];
+    let drawings = [];
+    let isDrawing = false;
+    let startX = 0, startY = 0;
+    let isInitialized = false;
+
+    const menuBtn = document.getElementById('menuBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const sideMenuBackdrop = document.getElementById('sideMenuBackdrop');
+
+    function openSideMenu() { sideMenu.style.display = 'flex'; sideMenuBackdrop.style.display = 'block'; }
+    function closeSideMenu() { sideMenu.style.display = 'none'; sideMenuBackdrop.style.display = 'none'; }
+    menuBtn.onclick = () => sideMenu.style.display === 'flex' ? closeSideMenu() : openSideMenu();
+    sideMenuBackdrop.onclick = closeSideMenu;
+
+    function deduplicatePieces(list) {
+      const seen = new Set();
+      return (list || []).filter(p => {
+        if (!p || !p.id || seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
+    }
+
+    function getCurrentStateSnapshot() {
+      const unique = deduplicatePieces(pieces);
+      return {
+        formation: document.getElementById('formationSelect').value,
+        pieces: unique.map(p => ({
+          id: p.id,
+          x: (!p.onBench && p.element && canvas.width > 0) ? parseFloat(p.element.style.left) / canvas.width : (p.savedX ?? 0.5),
+          y: (!p.onBench && p.element && canvas.height > 0) ? parseFloat(p.element.style.top) / canvas.height : (p.savedY ?? 0.7),
+          type: p.type,
+          num: String(p.num ?? ''),
+          name: String(p.name ?? 'Spiller'),
+          team: String(p.team ?? 'team-a'),
+          onBench: Boolean(p.onBench)
+        })),
+        drawings: Array.isArray(drawings) ? drawings : []
+      };
+    }
+
+    function saveData() {
+      if (!isInitialized) return;
+      try { localStorage.setItem(STATE_KEY, JSON.stringify(getCurrentStateSnapshot())); } catch (e) {}
+    }
+
+    function getSavedLineups() {
+      try {
+        const raw = localStorage.getItem(SAVED_LINEUPS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) { return []; }
+    }
+
+    function setSavedLineups(list) {
+      try { localStorage.setItem(SAVED_LINEUPS_KEY, JSON.stringify(list)); } catch (e) {}
+    }
+
+    async function buildPitchSnapshotCanvas() {
+      const w = canvas.width, h = canvas.height;
+      const snap = document.createElement('canvas');
+      snap.width = w; snap.height = h;
+      const sctx = snap.getContext('2d');
+      sctx.drawImage(canvas, 0, 0);
+
+      pieces.filter(p => !p.onBench && p.element).forEach(p => {
+        const px = parseFloat(p.element.style.left), py = parseFloat(p.element.style.top);
+        if (isNaN(px) || isNaN(py)) return;
+        if (p.type === 'ball') {
+          sctx.beginPath(); sctx.arc(px, py, 11, 0, Math.PI * 2);
+          sctx.fillStyle = '#ffffff'; sctx.fill();
+          sctx.lineWidth = 2; sctx.strokeStyle = '#000000'; sctx.stroke();
+          sctx.font = '12px sans-serif'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+          sctx.fillStyle = '#000000'; sctx.fillText('⚽', px, py + 0.5);
+        } else {
+          let gradColors = ['#3b82f6', '#1d4ed8'];
+          if (p.team === 'team-b') gradColors = ['#ef4444', '#b91c1c'];
+          else if (p.team === 'team-b gk') gradColors = ['#9333ea', '#6b21a8'];
+          else if (p.team === 'team-a gk') gradColors = ['#10b981', '#047857'];
+
+          const grad = sctx.createRadialGradient(px, py, 2, px, py, 15);
+          grad.addColorStop(0, gradColors[0]); grad.addColorStop(1, gradColors[1]);
+          sctx.beginPath(); sctx.arc(px, py, 15, 0, Math.PI * 2);
+          sctx.fillStyle = grad; sctx.fill();
+          sctx.lineWidth = 2; sctx.strokeStyle = 'rgba(255,255,255,0.85)'; sctx.stroke();
+
+          sctx.font = 'bold 12px system-ui, sans-serif'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+          sctx.fillStyle = '#ffffff'; sctx.fillText(String(p.num), px, py);
+
+          if (p.name) {
+            sctx.font = '10px system-ui, sans-serif';
+            const textW = sctx.measureText(p.name).width;
+            const boxW = textW + 10, boxH = 14, boxX = px - boxW / 2, boxY = py + 17;
+            sctx.fillStyle = 'rgba(15, 23, 42, 0.88)'; sctx.fillRect(boxX, boxY, boxW, boxH);
+            sctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'; sctx.lineWidth = 1; sctx.strokeRect(boxX, boxY, boxW, boxH);
+            sctx.fillStyle = '#ffffff'; sctx.fillText(p.name, px, boxY + boxH / 2 + 0.5);
+          }
+        }
+      });
+      return snap;
+    }
+
+    document.getElementById('menuShareBtn').onclick = async () => {
+      closeSideMenu();
+      const formation = document.getElementById('formationSelect').value;
+      const snapCanvas = await buildPitchSnapshotCanvas();
+      snapCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'opstilling-' + formation + '.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ title: 'Taktik - ' + formation, text: 'Opstilling (' + formation + ')', files: [file] }); }
+          catch (err) { if (err.name !== 'AbortError') downloadSnapshot(snapCanvas, formation); }
+        } else { downloadSnapshot(snapCanvas, formation); }
+      }, 'image/png');
+    };
+
+    function downloadSnapshot(snapCanvas, formation) {
+      const link = document.createElement('a');
+      link.download = 'opstilling-' + formation + '.png';
+      link.href = snapCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    document.getElemen
